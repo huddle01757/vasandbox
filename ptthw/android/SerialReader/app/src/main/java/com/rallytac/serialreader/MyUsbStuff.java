@@ -33,6 +33,19 @@ public class MyUsbStuff {
     public static final String ACTION_DEVICE_MESSAGE_RECEIVED = "com.rallytac.serialreader.MESSAGE_RECEIVED";
     public static final String EXTRA_DEVICE_MESSAGE_DATA = "com.rallytac.serialreader.EXTRA_MESSAGE_DATA";
 
+    private static final String DEVICE_PTT_ON_MSG = "PTT-DOWN";
+    private static final String DEVICE_PTT_OFF_MSG = "PTT-UP";
+
+    private static final String[] EXTERNAL_PTT_ON_INTENTS = {
+            "com.rallytac.engageandroid.reference.PTT_ON",
+            "com.dillonkane.ice.ptt.press"
+    };
+
+    private static final String[] EXTERNAL_PTT_OFF_INTENTS = {
+            "com.rallytac.engageandroid.reference.PTT_OFF",
+            "com.dillonkane.ice.ptt.release"
+    };
+
     private UsbManager _usbManager = null;
     private UsbDevice _device = null;
     private UsbDeviceConnection _connection = null;
@@ -226,6 +239,21 @@ public class MyUsbStuff {
                                     Intent intent = new Intent(ACTION_DEVICE_MESSAGE_RECEIVED);
                                     intent.putExtra(EXTRA_DEVICE_MESSAGE_DATA, messages[x]);
                                     _ctx.sendBroadcast(intent);
+
+                                    if(messages[x].equals(DEVICE_PTT_ON_MSG)) {
+                                        for(int idx = 0; idx < EXTERNAL_PTT_ON_INTENTS.length; idx++) {
+                                            Intent bi = new Intent(EXTERNAL_PTT_ON_INTENTS[idx]);
+                                            Log.d(TAG, "send [" + EXTERNAL_PTT_ON_INTENTS[idx] + "]");
+                                            _ctx.sendBroadcast(bi);
+                                        }
+                                    }
+                                    else if(messages[x].equals(DEVICE_PTT_OFF_MSG)) {
+                                        for(int idx = 0; idx < EXTERNAL_PTT_OFF_INTENTS.length; idx++) {
+                                            Intent bi = new Intent(EXTERNAL_PTT_OFF_INTENTS[idx]);
+                                            Log.d(TAG, "send [" + EXTERNAL_PTT_OFF_INTENTS[idx] + "]");
+                                            _ctx.sendBroadcast(bi);
+                                        }
+                                    }
                                 }
 
                                 //TODO: Don't just whack the builder, rather, just remove the messages we processed
