@@ -12,9 +12,11 @@
         <item>com.dillonkane.ice.ptt.release</item>
 
         <item>CHANNEL-NEXT^</item>
+        <item>com.rallytac.engageandroid.reference.NEXT_GROUP</item>
         <item>com.dillonkane.ice.channel.next</item>
 
         <item>CHANNEL-PREV^</item>
+        <item>com.rallytac.engageandroid.reference.PREV_GROUP</item>
         <item>com.dillonkane.ice.channel.previous</item>
     </string-array>
 </resources>
