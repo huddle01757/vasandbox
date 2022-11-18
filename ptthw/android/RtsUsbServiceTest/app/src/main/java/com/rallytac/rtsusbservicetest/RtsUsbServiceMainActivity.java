@@ -11,6 +11,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,8 +21,12 @@ import android.widget.ListView;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class RtsUsbServiceMainActivity extends AppCompatActivity {
     private final static String TAG = RtsUsbServiceMainActivity.class.toString();
@@ -47,6 +52,12 @@ public class RtsUsbServiceMainActivity extends AppCompatActivity {
             }
             else if (i.getAction().equals(RtsUsbServiceDeviceHandler.ACTION_USB_ATTACHED)) {
                 logIt("device attached");
+            }
+            else if (i.getAction().equals(RtsUsbServiceDeviceHandler.ACTION_LOG_TO_UI_REQUEST)) {
+                if(i.hasExtra(RtsUsbServiceDeviceHandler.EXTRA_LOG_TO_UI_REQUEST_DATA)) {
+                    String logMessage = i.getStringExtra(RtsUsbServiceDeviceHandler.EXTRA_LOG_TO_UI_REQUEST_DATA);
+                    logIt(logMessage);
+                }
             }
         }
     };
@@ -112,6 +123,7 @@ public class RtsUsbServiceMainActivity extends AppCompatActivity {
             filter.addAction(RtsUsbServiceDeviceHandler.ACTION_DEVICE_MESSAGE_RECEIVED);
             filter.addAction(RtsUsbServiceDeviceHandler.ACTION_USB_DETACHED);
             filter.addAction(RtsUsbServiceDeviceHandler.ACTION_USB_ATTACHED);
+            filter.addAction(RtsUsbServiceDeviceHandler.ACTION_LOG_TO_UI_REQUEST);
             registerReceiver(_myBroadcastReceiver, filter);
 
         }

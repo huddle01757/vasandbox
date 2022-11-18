@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="message_delimiter">^</string>
+
+    <string-array name="message_mapping">
+        <item>PTT-DOWN^</item>
+        <item>com.rallytac.engageandroid.reference.PTT_ON</item>
+        <item>com.dillonkane.ice.ptt.press</item>
+
+        <item>PTT-UP^</item>
+        <item>com.rallytac.engageandroid.reference.PTT_OFF</item>
+        <item>com.dillonkane.ice.ptt.release</item>
+
+        <item>CHANNEL-NEXT^</item>
+        <item>com.dillonkane.ice.channel.next</item>
+
+        <item>CHANNEL-PREV^</item>
+        <item>com.dillonkane.ice.channel.previous</item>
+    </string-array>
+</resources>

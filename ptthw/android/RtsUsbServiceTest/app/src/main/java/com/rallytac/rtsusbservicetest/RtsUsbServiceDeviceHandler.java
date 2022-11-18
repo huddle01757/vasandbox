@@ -18,7 +18,9 @@ import android.hardware.usb.UsbManager;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class RtsUsbServiceDeviceHandler {
@@ -34,19 +36,8 @@ public class RtsUsbServiceDeviceHandler {
     public static final String ACTION_NO_USB = "com.rallytac.rtsusbservice.NO_USB";
     public static final String ACTION_DEVICE_MESSAGE_RECEIVED = "com.rallytac.rtsusbservice.MESSAGE_RECEIVED";
     public static final String EXTRA_DEVICE_MESSAGE_DATA = "com.rallytac.rtsusbservice.EXTRA_MESSAGE_DATA";
-
-    private static final String DEVICE_PTT_ON_MSG = "PTT-DOWN";
-    private static final String DEVICE_PTT_OFF_MSG = "PTT-UP";
-
-    private static final String[] EXTERNAL_PTT_ON_INTENTS = {
-            "com.rallytac.engageandroid.reference.PTT_ON",
-            "com.dillonkane.ice.ptt.press"
-    };
-
-    private static final String[] EXTERNAL_PTT_OFF_INTENTS = {
-            "com.rallytac.engageandroid.reference.PTT_OFF",
-            "com.dillonkane.ice.ptt.release"
-    };
+    public static final String ACTION_LOG_TO_UI_REQUEST = "com.rallytac.rtsusbservice.LOG_TO_UI_REQUEST";
+    public static final String EXTRA_LOG_TO_UI_REQUEST_DATA = "com.rallytac.rtsusbservice.LOG_TO_UI_REQUEST_DATA";
 
     private UsbManager _usbManager = null;
     private UsbDevice _device = null;
@@ -57,6 +48,69 @@ public class RtsUsbServiceDeviceHandler {
     private RtsUsbConnectionThread _connThread = null;
     private UsbInterface _readInterface = null;
     private UsbEndpoint _readEndpoint = null;
+    private String _messageDelimiter = null;
+    private HashMap<String, ArrayList<String>>   _messageMap = null;
+
+    private void loadMessageMapping() {
+        _messageDelimiter = _ctx.getResources().getString(R.string.message_delimiter);
+        _messageMap = null;
+        String[] loadedMapping = _ctx.getResources().getStringArray(R.array.message_mapping);
+
+        String usbMessage = null;
+        ArrayList<String> mapped = null;
+
+        for(String s: loadedMapping) {
+            if(s.endsWith(_messageDelimiter)) {
+                if(usbMessage != null && mapped != null) {
+                    if(_messageMap == null) {
+                        _messageMap = new HashMap<>();
+                    }
+                    _messageMap.put(usbMessage, mapped);
+                }
+
+                usbMessage = s.substring(0, s.length()-1);
+                mapped = null;
+                continue;
+            }
+
+            if(mapped == null) {
+                mapped = new ArrayList<>();
+            }
+
+            mapped.add(s);
+        }
+
+        if(usbMessage != null && mapped != null) {
+            if(_messageMap == null) {
+                _messageMap = new HashMap<>();
+            }
+
+            _messageMap.put(usbMessage, mapped);
+        }
+
+        if(_messageMap != null) {
+            Log.d(TAG, "message mapping:");
+            Iterator itr = _messageMap.entrySet().iterator();
+            while(itr.hasNext()) {
+                Map.Entry element = (Map.Entry)itr.next();
+                String key = (String)element.getKey();
+                ArrayList<String> intents = (ArrayList<String>)element.getValue();
+                for(String intent: intents) {
+                    Log.d(TAG, "   [" + key + "]->[" + intent + "]");
+                }
+            }
+        }
+    }
+
+    private ArrayList<String> getMappedIntentsForUsbMessage(String usbMsg) {
+        if(_messageMap == null) {
+            return null;
+        }
+
+        ArrayList<String> rc = _messageMap.get(usbMsg);
+
+        return rc;
+    }
 
     private void startConnectionThread() {
         Log.d(TAG, "startConnectionThread");
@@ -122,6 +176,7 @@ public class RtsUsbServiceDeviceHandler {
         Log.d(TAG, "start");
         _ctx = ctx;
         _serialPortConnected = false;
+        loadMessageMapping();
         setFilter();
         _usbManager = (UsbManager) _ctx.getSystemService(Context.USB_SERVICE);
         findSerialPortDevice();
@@ -191,6 +246,14 @@ public class RtsUsbServiceDeviceHandler {
         }
     }
 
+    private void logToUi(String msg) {
+        Log.d(TAG, msg);
+
+        Intent logIntent = new Intent(ACTION_LOG_TO_UI_REQUEST);
+        logIntent.putExtra(EXTRA_LOG_TO_UI_REQUEST_DATA, msg);
+        _ctx.sendBroadcast(logIntent);
+    }
+
     private class RtsUsbConnectionThread extends Thread {
         private final String TAG = RtsUsbConnectionThread.class.getSimpleName();
         private final int PAUSE_MS = 500;
@@ -256,28 +319,24 @@ public class RtsUsbServiceDeviceHandler {
 
                             sb.append(s);
                             String capturedSoFar = sb.toString();
-                            String[] messages = capturedSoFar.split("\\^");
+                            String[] messages = capturedSoFar.split("\\" + _messageDelimiter);
                             if(messages != null) {
                                 for(int x = 0; x < messages.length; x++) {
-                                    Log.d(TAG, "msg: '" + messages[x] + "'");
+                                    Log.d(TAG, "msg: [" + messages[x] + "]");
 
                                     Intent intent = new Intent(ACTION_DEVICE_MESSAGE_RECEIVED);
                                     intent.putExtra(EXTRA_DEVICE_MESSAGE_DATA, messages[x]);
                                     _ctx.sendBroadcast(intent);
 
-                                    if(messages[x].equals(DEVICE_PTT_ON_MSG)) {
-                                        for(int idx = 0; idx < EXTERNAL_PTT_ON_INTENTS.length; idx++) {
-                                            Intent bi = new Intent(EXTERNAL_PTT_ON_INTENTS[idx]);
-                                            Log.d(TAG, "send [" + EXTERNAL_PTT_ON_INTENTS[idx] + "]");
-                                            _ctx.sendBroadcast(bi);
+                                    ArrayList<String> intentTextList = getMappedIntentsForUsbMessage(messages[x]);
+                                    if(intentTextList != null && !intentTextList.isEmpty()) {
+                                        for(String intentText: intentTextList) {
+                                            logToUi("[" + messages[x] + "] sends [" + intentText + "]");
+                                            _ctx.sendBroadcast(new Intent(intentText));
                                         }
                                     }
-                                    else if(messages[x].equals(DEVICE_PTT_OFF_MSG)) {
-                                        for(int idx = 0; idx < EXTERNAL_PTT_OFF_INTENTS.length; idx++) {
-                                            Intent bi = new Intent(EXTERNAL_PTT_OFF_INTENTS[idx]);
-                                            Log.d(TAG, "send [" + EXTERNAL_PTT_OFF_INTENTS[idx] + "]");
-                                            _ctx.sendBroadcast(bi);
-                                        }
+                                    else {
+                                        logToUi("no or empty mapping for [" + messages[x] + "]");
                                     }
                                 }
 
