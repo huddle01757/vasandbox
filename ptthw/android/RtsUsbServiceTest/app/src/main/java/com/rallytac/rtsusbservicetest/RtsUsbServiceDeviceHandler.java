@@ -51,6 +51,32 @@ public class RtsUsbServiceDeviceHandler {
     private String _messageDelimiter = null;
     private HashMap<String, ArrayList<String>>   _messageMap = null;
 
+    private ArrayList<String> _sysIntentsOnStart = null;
+    private ArrayList<String> _sysIntentsOnStop = null;
+    private ArrayList<String> _sysIntentsOnDeviceConnect = null;
+    private ArrayList<String> _sysIntentsOnDeviceDisconnect = null;
+
+    private ArrayList<String> loadStringArray(int resourceId) {
+        String[] loaded = _ctx.getResources().getStringArray(resourceId);
+        if(loaded == null || loaded.length == 0) {
+            return null;
+        }
+
+        ArrayList<String> rc = new ArrayList<>();
+        for(String s: loaded) {
+            rc.add(s);
+        }
+
+        return rc;
+    }
+
+    private void loadSysIntents() {
+        _sysIntentsOnStart = loadStringArray(R.array.intents_on_start);
+        _sysIntentsOnStop = loadStringArray(R.array.intents_on_stop);
+        _sysIntentsOnDeviceConnect = loadStringArray(R.array.intents_on_device_connect);
+        _sysIntentsOnDeviceDisconnect = loadStringArray(R.array.intents_on_device_disconnect);
+    }
+
     private void loadMessageMapping() {
         _messageDelimiter = _ctx.getResources().getString(R.string.message_delimiter);
         _messageMap = null;
@@ -115,6 +141,7 @@ public class RtsUsbServiceDeviceHandler {
     private void startConnectionThread() {
         Log.d(TAG, "startConnectionThread");
         stopConnectionThread();
+        sendIntentList(_sysIntentsOnDeviceConnect);
         _connectionThreadRunning = true;
         _connThread = new RtsUsbConnectionThread();
         _connThread.start();
@@ -124,6 +151,7 @@ public class RtsUsbServiceDeviceHandler {
         Log.d(TAG, "stopConnectionThread");
         _connectionThreadRunning = false;
         if(_connThread != null) {
+            sendIntentList(_sysIntentsOnDeviceDisconnect);
             try {
                 _connThread.join();
             } catch (InterruptedException e) {
@@ -172,18 +200,29 @@ public class RtsUsbServiceDeviceHandler {
         }
     };
 
+    private void sendIntentList(ArrayList<String> intentList) {
+        if(intentList != null && !intentList.isEmpty()) {
+            for(String s: intentList) {
+                _ctx.sendBroadcast(new Intent(s));
+            }
+        }
+    }
+
     public void start(Context ctx) {
         Log.d(TAG, "start");
         _ctx = ctx;
         _serialPortConnected = false;
+        loadSysIntents();
         loadMessageMapping();
         setFilter();
+        sendIntentList(_sysIntentsOnStart);
         _usbManager = (UsbManager) _ctx.getSystemService(Context.USB_SERVICE);
         findSerialPortDevice();
     }
 
     public void stop() {
         Log.d(TAG, "stop");
+        sendIntentList(_sysIntentsOnStop);
         stopConnectionThread();
     }
 

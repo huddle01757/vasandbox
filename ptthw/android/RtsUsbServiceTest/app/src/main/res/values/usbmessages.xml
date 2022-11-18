@@ -19,4 +19,16 @@
         <item>com.rallytac.engageandroid.reference.PREV_GROUP</item>
         <item>com.dillonkane.ice.channel.previous</item>
     </string-array>
+
+    <string-array name="intents_on_start">
+    </string-array>
+
+    <string-array name="intents_on_stop">
+    </string-array>
+
+    <string-array name="intents_on_device_connect">
+    </string-array>
+
+    <string-array name="intents_on_device_disconnect">
+    </string-array>
 </resources>
