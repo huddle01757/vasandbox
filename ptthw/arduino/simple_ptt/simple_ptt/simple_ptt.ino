@@ -41,11 +41,11 @@ void loop()
     // HIGH sends MSG_PTT_DOWN, LOW send MSG_PTT_UP 
     if(g_buttonState == HIGH)
     {
-      Serial.println(MSG_PTT_DOWN);
+      Serial.print(MSG_PTT_DOWN);
     }
     else
     {
-      Serial.println(MSG_PTT_UP);
+      Serial.print(MSG_PTT_UP);
     }
 
     // Remember the state
