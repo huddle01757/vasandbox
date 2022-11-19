@@ -38,5 +38,5 @@ $ adb install ptthw/android/RtsUsbServiceTest/app/release/rtsusbservicetest-<ver
 
 # Logcat from development machine
 ```shell
-$ adb logcat | grep RtsUsbServiceDeviceHandler
+$ adb logcat | grep -i rtsusbservice
 ```
