@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">RtsUsbServiceTest</string>
+    <string name="notification_title">RtsUsbServiceTest</string>
+    <string name="notification_message">RtsUsbServiceTest is running</string>
+    <string name="notification_ticker_text">RtsUsbServiceTest ticker text</string>
+    <string name="android_notification_channel_id">RtsUsbServiceTestNotificationChannelId</string>
+    <string name="android_notification_channel_name">RtsUsbServiceTestNotificationChannelName</string>
+    <string name="android_notification_channel_description">A driver to convert USB messages to Android Intents</string>
 </resources>

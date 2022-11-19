@@ -5,6 +5,7 @@
     <uses-sdk android:minSdkVersion="12" />
 
     <uses-feature android:name="android.hardware.usb.host" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
         android:name="com.rallytac.rtsusbservicetest.RtsUsbServiceApplication"

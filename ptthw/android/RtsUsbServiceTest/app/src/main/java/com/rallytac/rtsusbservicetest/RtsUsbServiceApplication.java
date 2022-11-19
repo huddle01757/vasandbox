@@ -6,6 +6,7 @@ package com.rallytac.rtsusbservicetest;
 
 import android.app.Application;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 public class RtsUsbServiceApplication extends Application {
@@ -15,7 +16,12 @@ public class RtsUsbServiceApplication extends Application {
     public void onCreate() {
         Log.d(TAG, "onCreate");
         super.onCreate();
-        startService(new Intent(this, RtsUsbService.class));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, RtsUsbService.class));
+        }
+        else {
+            startService(new Intent(this, RtsUsbService.class));
+        }
     }
 
     @Override
